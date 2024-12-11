@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom YouTube Audio Player</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .audio-player {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background-color: #f7f7f7;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 1rem;
+        }
+        .audio-thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+        .audio-details {
+            flex: 1;
+        }
+        .audio-details h5 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .audio-details p {
+            margin: 0;
+            color: gray;
+        }
+        .audio-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .audio-controls button {
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .audio-controls button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-4">
+        <h1 class="text-center">Custom YouTube Audio Player</h1>
+        <form id="video-form" class="d-flex mb-4">
+            <input type="text" id="video-url" class="form-control me-2" placeholder="Enter YouTube URL" required>
+            <button type="submit" class="btn btn-primary">Add Video</button>
+        </form>
+        <div id="player-container"></div>
+    </div>
+    <script>
+        const form = document.getElementById("video-form");
+        const playerContainer = document.getElementById("player-container");
+
+        function renderPlayer({ title, author, thumbnail, stream_url }) {
+            playerContainer.innerHTML = `
+                <div class="audio-player">
+                    <img src="${thumbnail}" alt="Thumbnail" class="audio-thumbnail">
+                    <div class="audio-details">
+                        <h5>${title}</h5>
+                        <p>${author}</p>
+                    </div>
+                    <div class="audio-controls">
+                        <button onclick="playAudio()">▶️</button>
+                        <button onclick="pauseAudio()">⏸️</button>
+                    </div>
+                    <audio id="audio-player" src="${stream_url}"></audio>
+                </div>
+            `;
+        }
+
+        function playAudio() {
+            document.getElementById('audio-player').play();
+        }
+
+        function pauseAudio() {
+            document.getElementById('audio-player').pause();
+        }
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const videoUrl = document.getElementById("video-url").value;
+
+            try {
+                const response = await fetch('/fetch_audio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: videoUrl }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    renderPlayer(data);
+                } else {
+                    alert(data.error || "Error fetching audio.");
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        });
+    </script>
+</body>
+</html>
